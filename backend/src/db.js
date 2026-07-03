@@ -7,16 +7,22 @@ const { Pool } = pg;
 
 const connectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
-  console.warn("WARNING: DATABASE_URL is not set. Database connections will fail.");
-}
+const poolConfig = connectionString 
+  ? { connectionString } 
+  : {
+      user: process.env.DB_USER || 'vibepoll_admin',
+      password: process.env.DB_PASSWORD || 'choose_a_strong_database_password',
+      host: process.env.DB_HOST || 'postgres',
+      database: process.env.DB_NAME || 'vibepoll',
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+    };
 
-const pool = new Pool({
-  connectionString,
-  max: 10, // Small pool for low resource footprint
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// Small pool for low resource footprint
+poolConfig.max = 10;
+poolConfig.idleTimeoutMillis = 30000;
+poolConfig.connectionTimeoutMillis = 2000;
+
+const pool = new Pool(poolConfig);
 
 export const query = (text, params) => pool.query(text, params);
 

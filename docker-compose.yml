@@ -60,7 +60,11 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${BACKEND_PORT:-5000}
-      DATABASE_URL: ${DATABASE_URL:-postgres://vibepoll_admin:choose_a_strong_database_password@postgres:5432/vibepoll}
+      DB_USER: ${POSTGRES_USER:-vibepoll_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-choose_a_strong_database_password}
+      DB_NAME: ${POSTGRES_DB:-vibepoll}
+      DB_HOST: ${POSTGRES_HOST:-postgres}
+      DB_PORT: ${POSTGRES_PORT:-5432}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-choose_a_strong_redis_password}
