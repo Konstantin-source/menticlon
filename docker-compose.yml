@@ -92,14 +92,23 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
-        VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:5000}
+        VITE_API_URL: ${VITE_API_URL:-https://menti.konstihome.de}
+        VITE_WS_URL: ${VITE_WS_URL:-wss://menti.konstihome.de}
     container_name: vibepoll_frontend
     restart: always
     ports:
       - "${FRONTEND_PORT:-80}:80"
     depends_on:
       - backend
+    networks:
+      - default
+      - web-services
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.menticlon.rule=Host(`menti.konstihome.de`)"
+      - "traefik.http.routers.menticlon.entrypoints=websecure"
+      - "traefik.http.routers.menticlon.tls=true"
+      - "traefik.http.services.menticlon.loadbalancer.server.port=80"
     deploy:
       resources:
         limits:
@@ -133,6 +142,13 @@ services:
         max-size: "10m"
         max-file: "3"
 
+networks:
+  default:
+    name: menticlon_internal
+  web-services:
+    external: true
+
 volumes:
   postgres_data:
     driver: local
+
