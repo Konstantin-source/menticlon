@@ -49,9 +49,7 @@ export default function Presenter({ joinCode }) {
   }, [joinCode]);
 
   useEffect(() => {
-    if (!activeQuestion) return;
-
-    // Connect to WebSocket and join session
+    // Connect to WebSocket and join session once when joinCode is present
     socket.connect();
     socket.emit('join-session', { joinCode, role: 'host' });
 
@@ -64,18 +62,8 @@ export default function Presenter({ joinCode }) {
       setResults(newResults);
     });
 
-    socket.on('question-changed', async (newQuestion) => {
+    socket.on('question-changed', (newQuestion) => {
       setActiveQuestion(newQuestion);
-      // Fetch results for the new question immediately
-      try {
-        const resQuery = await fetch(`/api/questions/${newQuestion.id}/results`);
-        if (resQuery.ok) {
-          const newResults = await resQuery.json();
-          setResults(newResults);
-        }
-      } catch (err) {
-        console.error("Failed to fetch new results:", err);
-      }
     });
 
     socket.on('error', (errMsg) => {
@@ -88,7 +76,7 @@ export default function Presenter({ joinCode }) {
       socket.off('question-changed');
       socket.off('error');
     };
-  }, [activeQuestion, joinCode]);
+  }, [joinCode]);
 
   // Navigate Questions (Advance/Back)
   const changeQuestion = (index) => {
@@ -143,12 +131,12 @@ export default function Presenter({ joinCode }) {
 
   const activeIndex = questions.findIndex(q => q.id === activeQuestion?.id);
 
-  // Word Cloud Generator calculations
+  // Word Cloud Generator calculations (Mentimeter style with 90° rotated blocks)
   const renderWordCloud = () => {
     const words = Object.entries(results);
     if (words.length === 0) {
       return (
-        <div className="h-full flex items-center justify-center text-slate-500 italic">
+        <div className="h-full flex items-center justify-center text-slate-500 italic py-12">
           Awaiting submissions from participants...
         </div>
       );
@@ -159,41 +147,52 @@ export default function Presenter({ joinCode }) {
     const maxCount = Math.max(...counts);
     const minCount = Math.min(...counts);
 
-    // Color array for words (Green palette)
+    // Lush green color array for words
     const colors = [
-      'text-emerald-400 shadow-emerald-500/20',
-      'text-teal-300 shadow-teal-500/20',
-      'text-lime-400 shadow-lime-500/20',
-      'text-emerald-300 shadow-emerald-400/20',
-      'text-green-400 shadow-green-500/20',
-      'text-lime-300 shadow-lime-400/20',
+      'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 shadow-emerald-500/10',
+      'text-mint border-teal-500/30 bg-teal-500/10 shadow-teal-500/10',
+      'text-lime-400 border-lime-500/30 bg-lime-500/10 shadow-lime-500/10',
+      'text-emerald-300 border-emerald-400/30 bg-emerald-400/10 shadow-emerald-400/10',
+      'text-green-400 border-green-500/30 bg-green-500/10 shadow-green-500/10',
+      'text-teal-300 border-teal-400/30 bg-teal-400/10 shadow-teal-400/10',
     ];
 
     return (
-      <div className="flex flex-wrap items-center justify-center gap-4 p-8 min-h-[300px] max-h-[450px] overflow-y-auto">
+      <div className="flex flex-wrap items-center justify-center gap-5 p-8 min-h-[320px] max-h-[480px] overflow-y-auto">
         {words.map(([word, rawCount], i) => {
           const count = Number(rawCount) || 0;
-          // Font size calculation (1rem to 3.5rem)
+          // Font size calculation (1.1rem to 3.8rem)
           const range = maxCount - minCount;
           const factor = range > 0 ? (count - minCount) / range : 0.5;
-          const fontSize = 1 + factor * 2.5; // in rem
-          
-          const colorClass = colors[i % colors.length];
+          const fontSize = 1.1 + factor * 2.7; // in rem
+
+          // Mentimeter 90° rotation effect for ~30% of words
+          const isVertical = (word.length + i) % 3 === 1;
+
+          const colorStyle = colors[i % colors.length];
 
           return (
-            <span
+            <div
               key={word}
-              style={{ fontSize: `${fontSize}rem` }}
-              className={`font-bold tracking-wide transition-all duration-300 transform hover:scale-110 cursor-default px-3 py-1.5 rounded-2xl bg-white/5 border border-white/5 animate-float ${colorClass}`}
-              title={`${count} vote(s)`}
+              className="inline-flex items-center justify-center p-1 transition-all duration-300 transform hover:scale-110 cursor-default"
             >
-              {word}
-              {count > 1 && (
-                <span className="text-[10px] ml-1.5 bg-white/10 px-1.5 py-0.5 rounded-full align-middle font-normal text-slate-400">
-                  {count}
-                </span>
-              )}
-            </span>
+              <span
+                style={{ fontSize: `${fontSize}rem` }}
+                className={`font-black tracking-wide px-4 py-2 rounded-2xl border backdrop-blur-md shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${colorStyle} ${
+                  isVertical ? '[writing-mode:vertical-rl] rotate-180 py-4 px-2' : ''
+                }`}
+                title={`${count} vote(s)`}
+              >
+                <span>{word}</span>
+                {count > 1 && (
+                  <span className={`text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold text-white ${
+                    isVertical ? '[writing-mode:horizontal-tb] rotate-180' : ''
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </span>
+            </div>
           );
         })}
       </div>
