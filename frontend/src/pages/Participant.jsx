@@ -90,7 +90,7 @@ export default function Participant({ joinCode }) {
         particleCount: 80,
         spread: 60,
         origin: { y: 0.8 },
-        colors: ['#8b5cf6', '#14b8a6', '#d946ef']
+        colors: ['#10b981', '#34d399', '#84cc16', '#22c55e']
       });
     });
 
@@ -163,7 +163,7 @@ export default function Participant({ joinCode }) {
         </button>
 
         <span className="font-extrabold text-lg text-white font-sans">
-          Vibe<span className="text-brand-teal">Poll</span>
+          Schmidt<span className="text-emerald-400">Poll</span>
         </span>
 
         {/* Dynamic connection indicator */}

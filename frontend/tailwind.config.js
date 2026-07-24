@@ -8,15 +8,22 @@ export default {
     extend: {
       colors: {
         brand: {
-          dark: "#0a0b10",
-          card: "rgba(22, 24, 37, 0.7)",
-          cardBorder: "rgba(255, 255, 255, 0.08)",
-          glowPurple: "rgba(139, 92, 246, 0.15)",
-          glowTeal: "rgba(20, 184, 166, 0.15)",
-          violet: "#8b5cf6",
-          fuchsia: "#d946ef",
-          teal: "#14b8a6",
-          rose: "#f43f5e",
+          dark: "#060d09",
+          card: "rgba(15, 26, 19, 0.75)",
+          cardBorder: "rgba(52, 211, 153, 0.12)",
+          glowEmerald: "rgba(52, 211, 153, 0.2)",
+          glowGreen: "rgba(16, 185, 129, 0.2)",
+          glowPurple: "rgba(16, 185, 129, 0.2)", // alias for backward compatibility
+          glowTeal: "rgba(52, 211, 153, 0.2)",   // alias for backward compatibility
+          emerald: "#10b981",
+          mint: "#34d399",
+          forest: "#059669",
+          lime: "#84cc16",
+          neon: "#22c55e",
+          violet: "#10b981", // mapped to emerald
+          fuchsia: "#22c55e",// mapped to neon green
+          teal: "#34d399",   // mapped to mint green
+          rose: "#f43f5e",   // error rose
           amber: "#f59e0b",
         }
       },

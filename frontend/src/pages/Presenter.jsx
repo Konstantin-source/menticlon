@@ -159,15 +159,14 @@ export default function Presenter({ joinCode }) {
     const maxCount = Math.max(...counts);
     const minCount = Math.min(...counts);
 
-    // Color array for words
+    // Color array for words (Green palette)
     const colors = [
-      'text-brand-violet shadow-violet-500/20',
-      'text-brand-teal shadow-teal-500/20',
-      'text-brand-fuchsia shadow-fuchsia-500/20',
-      'text-brand-rose shadow-rose-500/20',
-      'text-brand-amber shadow-amber-500/20',
-      'text-cyan-400 shadow-cyan-400/20',
-      'text-emerald-400 shadow-emerald-400/20',
+      'text-emerald-400 shadow-emerald-500/20',
+      'text-teal-300 shadow-teal-500/20',
+      'text-lime-400 shadow-lime-500/20',
+      'text-emerald-300 shadow-emerald-400/20',
+      'text-green-400 shadow-green-500/20',
+      'text-lime-300 shadow-lime-400/20',
     ];
 
     return (
@@ -212,13 +211,13 @@ export default function Presenter({ joinCode }) {
           const voteCount = Number(results[option]) || 0;
           const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
           
-          // Generate a gradient class based on index
+          // Generate a green gradient class based on index
           const gradients = [
-            'from-brand-violet to-purple-600',
-            'from-brand-teal to-teal-600',
-            'from-brand-fuchsia to-fuchsia-600',
-            'from-brand-rose to-rose-600',
-            'from-brand-amber to-amber-600'
+            'from-emerald-500 to-green-600',
+            'from-teal-400 to-emerald-600',
+            'from-lime-500 to-emerald-600',
+            'from-emerald-400 to-teal-700',
+            'from-green-400 to-emerald-700'
           ];
           const gradientClass = gradients[idx % gradients.length];
 

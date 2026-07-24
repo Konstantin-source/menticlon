@@ -151,11 +151,11 @@ export default function Landing() {
       {/* Header */}
       <div className="text-center mb-8 animate-fade-in">
         <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="bg-gradient-to-tr from-brand-violet to-brand-teal p-3 rounded-2xl glow-purple animate-float">
+          <div className="bg-gradient-to-tr from-emerald-600 to-emerald-400 p-3 rounded-2xl glow-green animate-float">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <span className="font-extrabold text-4xl md:text-5xl tracking-tight text-white font-sans">
-            Vibe<span className="text-brand-teal">Poll</span>
+            Schmidt<span className="text-emerald-400">Poll</span>
           </span>
         </div>
         <p className="text-slate-400 font-medium">High-Performance Real-Time Presentations & Live Voting</p>
