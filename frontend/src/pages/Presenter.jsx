@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, RotateCcw, Users, BarChart3, Cloud, ChevronLeft, ChevronRight, LogOut, RefreshCw } from 'lucide-react';
+import { Play, RotateCcw, Users, BarChart3, Cloud, ChevronLeft, ChevronRight, LogOut, RefreshCw, Zap } from 'lucide-react';
 import socket from '../socket.js';
 
 export default function Presenter({ joinCode }) {
@@ -11,6 +11,7 @@ export default function Presenter({ joinCode }) {
   const [activeCount, setActiveCount] = useState(0);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   const directJoinUrl = `${window.location.origin}/#/vote/${joinCode}`;
 
@@ -104,6 +105,16 @@ export default function Presenter({ joinCode }) {
     }
   };
 
+  // Simulate incoming crowd votes
+  const simulateVotes = (count = 100) => {
+    if (!activeQuestion || isSimulating) return;
+    setIsSimulating(true);
+    socket.emit('simulate-votes', { questionId: activeQuestion.id, joinCode, count });
+    setTimeout(() => {
+      setIsSimulating(false);
+    }, 2000);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
@@ -144,7 +155,7 @@ export default function Presenter({ joinCode }) {
     }
 
     // Find min and max count for scaling
-    const counts = words.map(([_, count]) => count);
+    const counts = words.map(([_, count]) => Number(count) || 0);
     const maxCount = Math.max(...counts);
     const minCount = Math.min(...counts);
 
@@ -161,7 +172,8 @@ export default function Presenter({ joinCode }) {
 
     return (
       <div className="flex flex-wrap items-center justify-center gap-4 p-8 min-h-[300px] max-h-[450px] overflow-y-auto">
-        {words.map(([word, count], i) => {
+        {words.map(([word, rawCount], i) => {
+          const count = Number(rawCount) || 0;
           // Font size calculation (1rem to 3.5rem)
           const range = maxCount - minCount;
           const factor = range > 0 ? (count - minCount) / range : 0.5;
@@ -192,12 +204,12 @@ export default function Presenter({ joinCode }) {
   // Bar Chart calculations
   const renderBarChart = () => {
     const options = activeQuestion.options || [];
-    const totalVotes = Object.values(results).reduce((acc, val) => acc + val, 0);
+    const totalVotes = Object.values(results).reduce((acc, val) => acc + (Number(val) || 0), 0);
 
     return (
       <div className="space-y-4 p-4 md:p-6">
         {options.map((option, idx) => {
-          const voteCount = results[option] || 0;
+          const voteCount = Number(results[option]) || 0;
           const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
           
           // Generate a gradient class based on index
@@ -240,6 +252,8 @@ export default function Presenter({ joinCode }) {
       </div>
     );
   };
+
+  const totalVotesCount = Object.values(results).reduce((acc, val) => acc + (Number(val) || 0), 0);
 
   return (
     <div className="relative min-h-screen grid-bg p-4 md:p-8 flex flex-col justify-between">
@@ -324,7 +338,7 @@ export default function Presenter({ joinCode }) {
 
             {/* Footer count */}
             <div className="text-right text-xs text-slate-500 border-t border-white/5 pt-4 mt-6">
-              Total Votes Submitted: {Object.values(results).reduce((acc, val) => acc + val, 0)}
+              Total Votes Submitted: {totalVotesCount}
             </div>
           </div>
         </div>
@@ -341,29 +355,53 @@ export default function Presenter({ joinCode }) {
           </button>
         </div>
 
-        {/* Navigation buttons */}
-        <div className="flex items-center gap-4 bg-brand-dark/50 p-1.5 rounded-xl border border-white/5">
-          <button
-            disabled={activeIndex === 0}
-            onClick={() => changeQuestion(activeIndex - 1)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-            title="Previous Question"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          
-          <span className="text-xs font-bold text-slate-300 px-2 min-w-[70px] text-center font-sans">
-            Slide {activeIndex + 1} / {questions.length}
-          </span>
+        {/* Center Controls: Question Nav & Simulation Controls */}
+        <div className="flex items-center gap-3">
+          {/* Navigation buttons */}
+          <div className="flex items-center gap-3 bg-brand-dark/50 p-1.5 rounded-xl border border-white/5">
+            <button
+              disabled={activeIndex === 0}
+              onClick={() => changeQuestion(activeIndex - 1)}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+              title="Previous Question"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            
+            <span className="text-xs font-bold text-slate-300 px-2 min-w-[70px] text-center font-sans">
+              Slide {activeIndex + 1} / {questions.length}
+            </span>
 
-          <button
-            disabled={activeIndex === questions.length - 1}
-            onClick={() => changeQuestion(activeIndex + 1)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-            title="Next Question"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+            <button
+              disabled={activeIndex === questions.length - 1}
+              onClick={() => changeQuestion(activeIndex + 1)}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+              title="Next Question"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Crowd Simulation Action Buttons */}
+          <div className="flex items-center gap-1 bg-brand-dark/50 p-1.5 rounded-xl border border-white/5">
+            <button
+              disabled={isSimulating}
+              onClick={() => simulateVotes(100)}
+              className="flex items-center gap-1 text-xs font-bold text-brand-teal hover:text-teal-300 bg-brand-teal/10 hover:bg-brand-teal/20 px-3 py-2 rounded-lg border border-brand-teal/20 transition-all disabled:opacity-40"
+              title="Simulate 100 live user votes"
+            >
+              <Zap className={`w-3.5 h-3.5 ${isSimulating ? 'animate-bounce text-brand-amber' : ''}`} />
+              Simulate 100 Votes
+            </button>
+            <button
+              disabled={isSimulating}
+              onClick={() => simulateVotes(10)}
+              className="text-[11px] font-semibold text-slate-400 hover:text-white hover:bg-white/5 px-2 py-2 rounded-lg transition-all disabled:opacity-40"
+              title="Simulate 10 votes"
+            >
+              +10
+            </button>
+          </div>
         </div>
 
         {/* Reset Counter Button */}

@@ -172,6 +172,67 @@ export const initSocket = (server) => {
       }
     });
 
+    // Handle Host simulating random votes for load testing / demo
+    socket.on('simulate-votes', async ({ questionId, joinCode, count = 100 }) => {
+      if (userRole !== 'host') {
+        socket.emit('error', 'Unauthorized action');
+        return;
+      }
+
+      try {
+        // Fetch question details
+        const questionRes = await db.query(
+          'SELECT type, options FROM questions WHERE id = $1',
+          [questionId]
+        );
+        if (questionRes.rows.length === 0) return;
+
+        const { type, options } = questionRes.rows[0];
+        const numVotes = Math.min(Math.max(parseInt(count, 10) || 10, 1), 500);
+
+        const wordPool = [
+          'Awesome', 'Interactive', 'Fast', 'Slick', 'Modern',
+          'Vibrant', 'Engaging', 'Seamless', 'Dynamic', 'Fun',
+          'Cool', 'Innovative', 'Responsive', 'Intuitive', 'Clean'
+        ];
+
+        const batchSize = Math.max(1, Math.floor(numVotes / 10));
+        let sent = 0;
+
+        const interval = setInterval(async () => {
+          const currentBatch = Math.min(batchSize, numVotes - sent);
+          if (currentBatch <= 0) {
+            clearInterval(interval);
+            return;
+          }
+
+          for (let i = 0; i < currentBatch; i++) {
+            let choice;
+            if (type === 'bar' && Array.isArray(options) && options.length > 0) {
+              choice = options[Math.floor(Math.random() * options.length)];
+            } else {
+              choice = wordPool[Math.floor(Math.random() * wordPool.length)];
+            }
+            await redis.incrementVote(questionId, choice);
+          }
+
+          sent += currentBatch;
+
+          // Broadcast updated results to the session room
+          const updatedResults = await redis.getQuestionResults(questionId);
+          io.to(`session:${joinCode}`).emit('results-update', updatedResults);
+
+          if (sent >= numVotes) {
+            clearInterval(interval);
+          }
+        }, 150);
+
+      } catch (err) {
+        console.error('Error simulating votes:', err);
+        socket.emit('error', 'Failed to simulate votes');
+      }
+    });
+
     // Handle client disconnect
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: ${socket.id}`);

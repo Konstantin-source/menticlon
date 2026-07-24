@@ -49,7 +49,14 @@ export const incrementVote = async (questionId, value) => {
  */
 export const getQuestionResults = async (questionId) => {
   const hashKey = `question:${questionId}:results`;
-  return await client.hGetAll(hashKey);
+  const rawResults = await client.hGetAll(hashKey);
+  const parsedResults = {};
+  if (rawResults) {
+    for (const [key, val] of Object.entries(rawResults)) {
+      parsedResults[key] = parseInt(val, 10) || 0;
+    }
+  }
+  return parsedResults;
 };
 
 /**
