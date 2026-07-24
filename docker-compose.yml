@@ -75,6 +75,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - default
+      - web-services
     deploy:
       resources:
         limits:

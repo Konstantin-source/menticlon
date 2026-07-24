@@ -158,7 +158,7 @@ export default function Landing() {
             Schmidt<span className="text-emerald-400">Poll</span>
           </span>
         </div>
-        <p className="text-slate-400 font-medium">High-Performance Real-Time Presentations & Live Voting</p>
+        <p className="text-slate-400 font-medium">Voting System</p>
       </div>
 
       {/* Main Containers Grid */}
